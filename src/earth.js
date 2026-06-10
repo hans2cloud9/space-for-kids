@@ -70,7 +70,7 @@ async function buildMapTexture(texture) {
   const ctx = canvas.getContext('2d');
   const W = canvas.width, H = canvas.height;
   try {
-    const res = await fetch('/countries-110m.json');
+    const res = await fetch(import.meta.env.BASE_URL + 'countries-110m.json');
     const topo = await res.json();
     const geo = feature(topo, topo.objects.countries);
     const palette = ['#8fce8f', '#f5c98a', '#efe28a', '#a8cfe8', '#f0a8c0', '#b8df95', '#f5a397', '#c5b3dc', '#ffd97a', '#97d8c8'];
