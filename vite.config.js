@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 
-export default defineConfig({
-  base: '/space-for-kids/',
-})
+// GitHub Pages needs /space-for-kids/ base; Vercel and local use /
+const base = process.env.GITHUB_ACTIONS ? '/space-for-kids/' : '/'
+
+export default defineConfig({ base })
