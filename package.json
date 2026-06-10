@@ -1,0 +1,20 @@
+{
+  "name": "space-for-kids",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "three": "^0.170.0",
+    "topojson-client": "^3.1.0"
+  },
+  "devDependencies": {
+    "vite": "^6.0.0"
+  },
+  "description": "아이들을 위한 인터랙티브 우주 시뮬레이션 — 케플러 태양계, 은하 줌 여행, 별 찾기 게임, 로켓 여행, 지구 탐험",
+  "license": "MIT"
+}
