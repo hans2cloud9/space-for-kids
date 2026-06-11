@@ -23,6 +23,7 @@ export const ORBITAL_ELEMENTS = {
   saturn:  { a: 9.53667594, e: 0.05386179, i: 2.48599187, L: 49.95424423, peri: 92.59887831, node: 113.66242448, Lrate: 1222.49362201 },
   uranus:  { a: 19.18916464, e: 0.04725744, i: 0.77263783, L: 313.23810451, peri: 170.95427630, node: 74.01692503, Lrate: 428.48202785 },
   neptune: { a: 30.06992276, e: 0.00859048, i: 1.77004347, L: -55.12002969, peri: 44.96476227, node: 131.78422574, Lrate: 218.45945325 },
+  pluto:   { a: 39.48211675, e: 0.24882730, i: 17.14001206, L: 238.92903833, peri: 224.06891629, node: 110.30393684, Lrate: 145.20780515 },
 };
 
 // 케플러 방정식 M = E - e·sinE 를 뉴턴법으로 풀이
@@ -96,19 +97,26 @@ export function orbitPoints(key, segments = 256) {
   return pts;
 }
 
-/** 달: 지구 중심 케플러 궤도 (시각용 — 거리는 보기 좋게 고정 오프셋) */
-export function moonPosition(days, visualDist, out) {
-  const period = 27.321661; // 항성월
-  const e = 0.0549;
-  const M = (TWO_PI * days) / period + 2.36; // 위상 오프셋
+/**
+ * 위성: 행성 중심 케플러 궤도 (시각용 — 거리는 보기 좋게 고정 오프셋)
+ * def: { period(일), dist(씬 유닛), phase(위상 rad), e(이심률), incl(경사 deg) }
+ */
+export function satellitePosition(days, def, out) {
+  const { period, dist, phase = 0, e = 0, incl = 0 } = def;
+  const M = (TWO_PI * days) / period + phase;
   const E = solveKepler(M, e);
   const xp = Math.cos(E) - e;
   const yp = Math.sqrt(1 - e * e) * Math.sin(E);
   const r = Math.hypot(xp, yp);
-  const s = visualDist / (r || 1);
-  const incl = 5.14 * DEG;
+  const s = dist / (r || 1);
+  const inc = incl * DEG;
   out.x = xp * s;
-  out.y = yp * s * Math.sin(incl);
-  out.z = -yp * s * Math.cos(incl);
+  out.y = yp * s * Math.sin(inc);
+  out.z = -yp * s * Math.cos(inc);
   return out;
+}
+
+/** 달: 지구 중심 케플러 궤도 (satellitePosition 특수 케이스) */
+export function moonPosition(days, visualDist, out) {
+  return satellitePosition(days, { period: 27.321661, dist: visualDist, phase: 2.36, e: 0.0549, incl: 5.14 }, out);
 }

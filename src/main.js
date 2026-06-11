@@ -127,13 +127,14 @@ if (kids) initGame(kids);
 // ---------- 로켓 여행 모드 ----------
 const rocket = createRocket(scene);
 
-const DEST_ORDER = ['태양', '수성', '금성', '지구', '달', '화성', '목성', '토성', '천왕성', '해왕성'];
+const DEST_ORDER = ['태양', '수성', '금성', '지구', '달', '화성', '목성', '토성', '천왕성', '해왕성', '명왕성'];
 const DEST_EXTRA = { 태양: { color: '#ffb83d', emoji: '☀️' }, 달: { color: '#b9b4ae', emoji: '🌙' } };
 let destItems = []; // {id, name, color, emoji?, data?(hitMesh userData), quest?}
 
 function buildDestItems() {
   const bodies = solar.hitMeshes
     .map((h) => h.userData)
+    .filter((d) => !d.isSatellite) // 위성은 너무 작아 로켓 목적지에서 제외
     .filter((d, i, arr) => arr.findIndex((x) => x.name === d.name) === i)
     .sort((a, b) => DEST_ORDER.indexOf(a.name) - DEST_ORDER.indexOf(b.name))
     .map((d) => ({
@@ -448,9 +449,10 @@ window.addEventListener('resize', () => {
 // 자동 테스트용 훅 (?test 파라미터가 있을 때만)
 if (new URLSearchParams(location.search).has('test')) {
   window.__test = {
-    rig, rocket, earth,
+    rig, rocket, earth, solar,
     get game() { return game; },
     startEarthFlight,
+    enterShipMode, enterEarthMode,
     mode: () => mode,
     pick: (name) => {
       const item = destItems.find((i) => i.name === name);

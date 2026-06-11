@@ -1,7 +1,7 @@
 // 태양 + 8행성 + 달 + 토성 고리 — 케플러 궤도로 공전
 import * as THREE from 'three';
-import { planetPosition, moonPosition, orbitPoints } from './kepler.js';
-import { canvasTexture, glowSprite } from './sprites.js';
+import { planetPosition, moonPosition, satellitePosition, orbitPoints, compressDistance } from './kepler.js';
+import { canvasTexture, glowSprite, glowTexture } from './sprites.js';
 
 const DEG = Math.PI / 180;
 
@@ -15,7 +15,22 @@ export const PLANET_SPECS = [
   { key: 'saturn',  name: '토성',   size: 0.394, rotDays: 0.444,  color: '#e3cf9e', fact: '멋진 고리를 가지고 있어요!' },
   { key: 'uranus',  name: '천왕성', size: 0.260, rotDays: -0.718, color: '#9fd8de', fact: '옆으로 누워서 빙글빙글 돌아요!', tilt: 98 },
   { key: 'neptune', name: '해왕성', size: 0.250, rotDays: 0.671,  color: '#4666d1', fact: '제일 멀리 있는 파란 행성이에요!' },
+  { key: 'pluto',   name: '명왕성', size: 0.060, rotDays: 6.39,   color: '#cbb9a6', fact: '행성이 아니라 왜소행성이에요. 아주아주 멀리 있어요!' },
 ];
+
+// 행성별 위성 — 지구의 달과 같은 패턴으로 공전·탭·추적·TTS 자동 동작
+// dist(씬 유닛), period(공전일), color(점박이 텍스처 베이스)
+const SATELLITES = {
+  jupiter: [
+    { name: '이오',     size: 0.040, dist: 0.62, period: 1.77,  e: 0.004, incl: 0.04, color: '#e8d96a', speck: '#b89a3a', fact: '불을 뿜는 화산이 많아요!' },
+    { name: '유로파',   size: 0.038, dist: 0.80, period: 3.55,  e: 0.009, incl: 0.47, color: '#dcd2c0', speck: '#a89070', fact: '얼음 아래에 바다가 있을지도 몰라요!' },
+    { name: '가니메데', size: 0.052, dist: 1.00, period: 7.15,  e: 0.001, incl: 0.20, color: '#a89784', speck: '#6e5f4e', fact: '태양계에서 제일 큰 달이에요!' },
+    { name: '칼리스토', size: 0.050, dist: 1.22, period: 16.69, e: 0.007, incl: 0.19, color: '#8f8378', speck: '#544a40', fact: '울퉁불퉁 구덩이가 아주 많아요!' },
+  ],
+  saturn: [
+    { name: '타이탄',   size: 0.050, dist: 0.92, period: 15.95, e: 0.029, incl: 0.35, color: '#e0a85c', speck: '#a8742e', fact: '토성의 제일 큰 달이에요. 공기가 있어요!' },
+  ],
+};
 
 // ---------- 절차적 행성 텍스처 ----------
 
@@ -136,6 +151,7 @@ const TEXTURE_MAKERS = {
   saturn:  () => bandsTexture(['#e3cf9e', '#efe0b8', '#d8c08a', '#e9d7a8'], { seed: 21 }),
   uranus:  () => bandsTexture(['#9fd8de', '#b3e2e7', '#92cfd6'], { blur: false }),
   neptune: () => bandsTexture(['#4666d1', '#5b7ade', '#3a55b8', '#5273d8'], { seed: 31 }),
+  pluto:   () => speckleTexture('#cbb9a6', '#8f7c68', 140, 23),
 };
 
 function ringTexture() {
@@ -152,6 +168,35 @@ function ringTexture() {
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, w, h);
   });
+}
+
+// ---------- 소행성대 ----------
+
+function buildAsteroidBelt(count = 420) {
+  const inner = compressDistance(2.2);
+  const outer = compressDistance(3.3);
+  const positions = new Float32Array(count * 3);
+  const colors = new Float32Array(count * 3);
+  const r = rand(777);
+  const tint = [new THREE.Color('#b6a48c'), new THREE.Color('#8f8070'), new THREE.Color('#cdbfa6')];
+  for (let i = 0; i < count; i++) {
+    const ang = r() * Math.PI * 2;
+    const rad = inner + r() * (outer - inner);
+    positions[i * 3] = Math.cos(ang) * rad;
+    positions[i * 3 + 1] = (r() - 0.5) * 0.18;
+    positions[i * 3 + 2] = Math.sin(ang) * rad;
+    const c = tint[(r() * tint.length) | 0];
+    colors[i * 3] = c.r; colors[i * 3 + 1] = c.g; colors[i * 3 + 2] = c.b;
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  const mat = new THREE.PointsMaterial({
+    size: 0.045, sizeAttenuation: true, vertexColors: true,
+    map: glowTexture('#ffffff', '#ffffff'), alphaTest: 0.2,
+    transparent: true, opacity: 0.95, depthWrite: false,
+  });
+  return new THREE.Points(geo, mat);
 }
 
 // ---------- 빌드 ----------
@@ -178,6 +223,10 @@ export function createSolarSystem(scene) {
   // 궤도선 그룹
   const orbitLines = new THREE.Group();
   group.add(orbitLines);
+
+  // 소행성대 (화성~목성 사이 띠)
+  const belt = buildAsteroidBelt();
+  group.add(belt);
 
   const bodies = [];      // 업데이트 대상
   const hitMeshes = [];   // 탭 판정용 (보이지 않는 큰 구)
@@ -245,6 +294,26 @@ export function createSolarSystem(scene) {
       bodies.push({ kind: 'moon', pivot: moonPivot, mesh: moonMesh });
     }
 
+    // 행성 위성 (목성·토성) — 달과 동일 패턴, satDef로 공전
+    const sats = SATELLITES[spec.key];
+    if (sats) {
+      for (const sat of sats) {
+        const satPivot = new THREE.Group();
+        pivot.add(satPivot);
+        const satMesh = new THREE.Mesh(
+          new THREE.SphereGeometry(sat.size, 20, 14),
+          new THREE.MeshStandardMaterial({ map: speckleTexture(sat.color, sat.speck, 120, sat.name.length * 7 + 3), roughness: 1 })
+        );
+        satPivot.add(satMesh);
+        addHitSphere(satPivot, Math.max(sat.size * 3, 0.18), {
+          name: sat.name, fact: sat.fact, size: sat.size, followDist: Math.max(sat.size * 9, 0.6),
+          isSatellite: true,
+          getPos: (v) => satPivot.getWorldPosition(v),
+        });
+        bodies.push({ kind: 'moon', pivot: satPivot, mesh: satMesh, satDef: sat, rotDays: sat.period });
+      }
+    }
+
     addHitSphere(pivot, Math.max(spec.size * 2.4, 0.28), {
       name: spec.name, fact: spec.fact, size: spec.size, followDist: Math.max(spec.size * 8, 1.1),
       getPos: (v) => pivot.getWorldPosition(v),
@@ -267,15 +336,17 @@ export function createSolarSystem(scene) {
 
   function update(simDays) {
     sun.rotation.y = (Math.PI * 2 * simDays) / 25.4;
+    belt.rotation.y = simDays * 0.03; // 소행성대 느린 공전
     for (const b of bodies) {
       if (b.kind === 'planet') {
         planetPosition(b.spec.key, simDays, tmp);
         b.pivot.position.set(tmp.x, tmp.y, tmp.z);
         b.mesh.rotation.y = (Math.PI * 2 * simDays) / b.spec.rotDays;
       } else if (b.kind === 'moon') {
-        moonPosition(simDays, 0.32, tmp);
+        if (b.satDef) satellitePosition(simDays, b.satDef, tmp);
+        else moonPosition(simDays, 0.32, tmp);
         b.pivot.position.set(tmp.x, tmp.y, tmp.z);
-        b.mesh.rotation.y = (Math.PI * 2 * simDays) / 27.32;
+        b.mesh.rotation.y = (Math.PI * 2 * simDays) / (b.rotDays || 27.32);
       }
     }
   }
