@@ -22,31 +22,51 @@ export function setMuted(v) {
 let pendingSpeak = null;
 let watchdog = null;
 
+// voices는 비동기로 로드된다(Chrome/Safari는 첫 getVoices()가 빈 배열).
+// voiceschanged로 캐시해 두고, 한국어 voice를 안정적으로 찾는다.
+let voiceCache = [];
+function refreshVoices() {
+  if ('speechSynthesis' in window) voiceCache = window.speechSynthesis.getVoices() || [];
+}
+if ('speechSynthesis' in window) {
+  refreshVoices();
+  window.speechSynthesis.addEventListener?.('voiceschanged', refreshVoices);
+}
+function koVoice() {
+  if (!voiceCache.length) refreshVoices();
+  return voiceCache.find((v) => v.lang?.startsWith('ko') || /korean|한국/i.test(v.name || ''));
+}
+
+function utter(text) {
+  const synth = window.speechSynthesis;
+  synth.resume();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'ko-KR';
+  u.rate = 0.95;
+  u.pitch = 1.15;
+  const ko = koVoice();
+  if (ko) u.voice = ko;
+  synth.speak(u);
+  clearTimeout(watchdog);
+  watchdog = setTimeout(() => {
+    if (synth.speaking || synth.pending) { synth.cancel(); synth.resume(); }
+  }, 12000);
+}
+
 export function speak(text) {
-  if (muted || !('speechSynthesis' in window)) return;
+  if (muted || !('speechSynthesis' in window) || !text) return;
   const synth = window.speechSynthesis;
   clearTimeout(pendingSpeak);
   clearTimeout(watchdog);
-  synth.cancel();
-  // 크롬 버그 방어: cancel() 직후 바로 speak()하면 엔진이 먹통으로 끼는 경우가 있어
-  // 한 박자 쉬고, paused 상태로 굳어 있으면 resume으로 깨운 뒤 말한다
-  pendingSpeak = setTimeout(() => {
-    synth.resume();
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = 'ko-KR';
-    u.rate = 0.95;
-    u.pitch = 1.15;
-    const ko = synth.getVoices().find((v) => v.lang?.startsWith('ko'));
-    if (ko) u.voice = ko;
-    synth.speak(u);
-    // 워치독: 시작도 못 하고 12초 넘게 끼어 있으면 큐를 비워 다음 음성을 살린다
-    watchdog = setTimeout(() => {
-      if (synth.speaking || synth.pending) {
-        synth.cancel();
-        synth.resume();
-      }
-    }, 12000);
-  }, 80);
+  // 이미 말하는 중일 때만 cancel + 지연(크롬 먹통 버그 방어).
+  // 한가할 땐 지연 없이 즉시 발화 — 모바일(iOS/아이패드)에서 사용자 제스처
+  // 컨텍스트를 유지해야 첫 음성이 차단되지 않는다.
+  if (synth.speaking || synth.pending) {
+    synth.cancel();
+    pendingSpeak = setTimeout(() => utter(text), 90);
+  } else {
+    utter(text);
+  }
 }
 
 /** 사용자 제스처마다 호출 — 잠든 오디오(탭 전환·iOS 절전 등) 깨우기 */
