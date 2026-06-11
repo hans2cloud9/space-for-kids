@@ -7,20 +7,43 @@ import { glowSprite, glowTexture, labelSprite, canvasTexture } from './sprites.j
 const R = 5; // 지구본 반지름
 const DEG = Math.PI / 180;
 
-// 4~7세용 나라 12개 (대표 도시 좌표)
+// 4~7세용 나라 24개 (대표 도시 좌표 + 명소·동물·음식)
+// kind/photo는 도착 사진 카드용. photo 없거나 로드 실패 시 이모지 폴백.
 export const COUNTRIES = [
-  { id: 'korea',     name: '한국',     flag: '🇰🇷', lat: 37.5,  lon: 127.0,  color: '#7ec8ff', fact: '우리가 사는 나라예요! 안녕하세요!' },
-  { id: 'japan',     name: '일본',     flag: '🇯🇵', lat: 35.7,  lon: 139.7,  color: '#ffb3c1', fact: '초밥이랑 후지산이 유명해요!' },
-  { id: 'china',     name: '중국',     flag: '🇨🇳', lat: 39.9,  lon: 116.4,  color: '#ff8a80', fact: '귀여운 판다가 사는 나라예요!' },
-  { id: 'india',     name: '인도',     flag: '🇮🇳', lat: 28.6,  lon: 77.2,   color: '#ffd180', fact: '하얀 궁전 타지마할이 있어요!' },
-  { id: 'egypt',     name: '이집트',   flag: '🇪🇬', lat: 30.0,  lon: 31.2,   color: '#ffe082', fact: '사막에 커다란 피라미드가 있어요!' },
-  { id: 'kenya',     name: '케냐',     flag: '🇰🇪', lat: -1.3,  lon: 36.8,   color: '#a5d6a7', fact: '사자랑 코끼리가 뛰어노는 곳이에요!' },
-  { id: 'france',    name: '프랑스',   flag: '🇫🇷', lat: 48.9,  lon: 2.4,    color: '#90caf9', fact: '뾰족한 에펠탑이 있는 나라예요!' },
-  { id: 'uk',        name: '영국',     flag: '🇬🇧', lat: 51.5,  lon: -0.1,   color: '#b39ddb', fact: '커다란 시계탑 빅벤이 있어요!' },
-  { id: 'italy',     name: '이탈리아', flag: '🇮🇹', lat: 41.9,  lon: 12.5,   color: '#c5e1a5', fact: '피자랑 스파게티가 태어난 나라예요!' },
-  { id: 'usa',       name: '미국',     flag: '🇺🇸', lat: 40.7,  lon: -74.0,  color: '#81d4fa', fact: '자유의 여신상이 있는 아주 큰 나라예요!' },
-  { id: 'brazil',    name: '브라질',   flag: '🇧🇷', lat: -22.9, lon: -43.2,  color: '#aed581', fact: '아마존 밀림과 축구의 나라예요!' },
-  { id: 'australia', name: '호주',     flag: '🇦🇺', lat: -33.9, lon: 151.2,  color: '#ffcc80', fact: '캥거루랑 코알라가 살아요!' },
+  { id: 'korea',     name: '한국',     flag: '🇰🇷', lat: 37.5,  lon: 127.0,  color: '#7ec8ff', emoji: '🏯', landmark: '경복궁', photo: 'korea.jpg',     fact: '우리가 사는 나라예요! 안녕하세요!',        animal: '🐯 호랑이가 옛날이야기에 나와요',    food: '🥟 김치랑 불고기가 맛있어요' },
+  { id: 'japan',     name: '일본',     flag: '🇯🇵', lat: 35.7,  lon: 139.7,  color: '#ffb3c1', emoji: '🗻', landmark: '후지산', photo: 'japan.jpg',     fact: '초밥이랑 후지산이 유명해요!',            animal: '🐒 눈에서 목욕하는 원숭이가 살아요', food: '🍣 초밥이 유명해요' },
+  { id: 'china',     name: '중국',     flag: '🇨🇳', lat: 39.9,  lon: 116.4,  color: '#ff8a80', emoji: '🐼', landmark: '만리장성', photo: 'china.jpg',   fact: '귀여운 판다가 사는 나라예요!',          animal: '🐼 대나무를 먹는 판다가 살아요',     food: '🥟 만두가 맛있어요' },
+  { id: 'india',     name: '인도',     flag: '🇮🇳', lat: 28.6,  lon: 77.2,   color: '#ffd180', emoji: '🕌', landmark: '타지마할', photo: 'india.jpg',   fact: '하얀 궁전 타지마할이 있어요!',          animal: '🐘 코끼리가 사람들과 함께 살아요',   food: '🍛 향긋한 카레가 유명해요' },
+  { id: 'egypt',     name: '이집트',   flag: '🇪🇬', lat: 30.0,  lon: 31.2,   color: '#ffe082', emoji: '🔺', landmark: '피라미드', photo: 'egypt.jpg',   fact: '사막에 커다란 피라미드가 있어요!',      animal: '🐪 사막을 걷는 낙타가 있어요',       food: '🫓 납작한 빵을 먹어요' },
+  { id: 'kenya',     name: '케냐',     flag: '🇰🇪', lat: -1.3,  lon: 36.8,   color: '#a5d6a7', emoji: '🦁', landmark: '사바나 초원', photo: 'kenya.jpg', fact: '사자랑 코끼리가 뛰어노는 곳이에요!',    animal: '🦁 사자와 기린이 뛰어놀아요',        food: '🌽 옥수수죽을 먹어요' },
+  { id: 'france',    name: '프랑스',   flag: '🇫🇷', lat: 48.9,  lon: 2.4,    color: '#90caf9', emoji: '🗼', landmark: '에펠탑', photo: 'france.jpg',    fact: '뾰족한 에펠탑이 있는 나라예요!',        animal: '🐓 닭이 나라의 상징이에요',          food: '🥐 크루아상이 맛있어요' },
+  { id: 'uk',        name: '영국',     flag: '🇬🇧', lat: 51.5,  lon: -0.1,   color: '#b39ddb', emoji: '🕰️', landmark: '빅벤', photo: 'uk.jpg',          fact: '커다란 시계탑 빅벤이 있어요!',          animal: '🐶 불독이 영국 강아지예요',          food: '🍟 피시앤칩스를 먹어요' },
+  { id: 'italy',     name: '이탈리아', flag: '🇮🇹', lat: 41.9,  lon: 12.5,   color: '#c5e1a5', emoji: '🏛️', landmark: '콜로세움', photo: 'italy.jpg',  fact: '피자랑 스파게티가 태어난 나라예요!',    animal: '🐺 늑대 이야기가 유명해요',          food: '🍕 피자와 스파게티가 태어났어요' },
+  { id: 'usa',       name: '미국',     flag: '🇺🇸', lat: 40.7,  lon: -74.0,  color: '#81d4fa', emoji: '🗽', landmark: '자유의 여신상', photo: 'usa.jpg', fact: '자유의 여신상이 있는 아주 큰 나라예요!', animal: '🦅 흰머리수리가 상징이에요',         food: '🍔 햄버거가 유명해요' },
+  { id: 'brazil',    name: '브라질',   flag: '🇧🇷', lat: -22.9, lon: -43.2,  color: '#aed581', emoji: '⛪', landmark: '예수상', photo: 'brazil.jpg',    fact: '아마존 밀림과 축구의 나라예요!',        animal: '🦜 알록달록 투칸 새가 살아요',       food: '⚽ 축구를 제일 좋아해요' },
+  { id: 'australia', name: '호주',     flag: '🇦🇺', lat: -33.9, lon: 151.2,  color: '#ffcc80', emoji: '🎭', landmark: '오페라 하우스', photo: 'australia.jpg', fact: '캥거루랑 코알라가 살아요!',    animal: '🦘 캥거루와 코알라가 살아요',        food: '🍖 바비큐를 즐겨 먹어요' },
+  { id: 'thailand',  name: '태국',     flag: '🇹🇭', lat: 13.7,  lon: 100.5,  color: '#ffd54f', emoji: '🛕', landmark: '왓아룬 사원', photo: 'thailand.jpg', fact: '코끼리가 많은 따뜻한 나라예요!',  animal: '🐘 코끼리가 친구처럼 지내요',        food: '🍜 팟타이 국수가 맛있어요' },
+  { id: 'vietnam',   name: '베트남',   flag: '🇻🇳', lat: 21.0,  lon: 105.8,  color: '#ff8a65', emoji: '⛰️', landmark: '하롱베이', photo: 'vietnam.jpg', fact: '바다에 멋진 바위섬이 많아요!',         animal: '🐃 물소가 논에서 일을 도와요',       food: '🍜 쌀국수가 유명해요' },
+  { id: 'indonesia', name: '인도네시아', flag: '🇮🇩', lat: -6.2, lon: 106.8, color: '#80cbc4', emoji: '🛕', landmark: '보로부두르', photo: 'indonesia.jpg', fact: '섬이 아주아주 많은 나라예요!',     animal: '🦧 오랑우탄이 나무에 살아요',        food: '🍚 볶음밥 나시고렝을 먹어요' },
+  { id: 'saudi',     name: '사우디아라비아', flag: '🇸🇦', lat: 24.7, lon: 46.7, color: '#ffb74d', emoji: '🕋', landmark: '사막 도시', photo: 'saudi.jpg', fact: '뜨거운 사막이 펼쳐진 나라예요!',    animal: '🐪 낙타를 타고 사막을 다녀요',       food: '🌴 달콤한 대추야자를 먹어요' },
+  { id: 'germany',   name: '독일',     flag: '🇩🇪', lat: 52.5,  lon: 13.4,   color: '#bcaaa4', emoji: '🏰', landmark: '노이슈반슈타인 성', photo: 'germany.jpg', fact: '동화 속 같은 멋진 성이 있어요!', animal: '🦅 독수리가 상징이에요',     food: '🌭 소시지를 즐겨 먹어요' },
+  { id: 'spain',     name: '스페인',   flag: '🇪🇸', lat: 40.4,  lon: -3.7,   color: '#ffab91', emoji: '⛪', landmark: '사그라다 파밀리아', photo: 'spain.jpg', fact: '신나는 축제가 많은 나라예요!',    animal: '🐂 용감한 소가 유명해요',            food: '🥘 빠에야 밥 요리가 맛있어요' },
+  { id: 'russia',    name: '러시아',   flag: '🇷🇺', lat: 55.8,  lon: 37.6,   color: '#9fa8da', emoji: '⛪', landmark: '성 바실리 성당', photo: 'russia.jpg', fact: '세상에서 제일 큰 나라예요!',      animal: '🐻 커다란 불곰이 살아요',            food: '🥧 따끈한 만두 펠메니를 먹어요' },
+  { id: 'canada',    name: '캐나다',   flag: '🇨🇦', lat: 45.4,  lon: -75.7,  color: '#ef9a9a', emoji: '🍁', landmark: '단풍 숲', photo: 'canada.jpg',   fact: '단풍잎이 상징인 나라예요!',            animal: '🦫 부지런한 비버가 살아요',          food: '🥞 단풍 시럽을 팬케이크에 발라요' },
+  { id: 'mexico',    name: '멕시코',   flag: '🇲🇽', lat: 19.4,  lon: -99.1,  color: '#a5d6a7', emoji: '🔺', landmark: '치첸이트사', photo: 'mexico.jpg', fact: '옛날 신비한 피라미드가 있어요!',     animal: '🦅 독수리와 선인장이 깃발에 있어요', food: '🌮 타코가 유명해요' },
+  { id: 'argentina', name: '아르헨티나', flag: '🇦🇷', lat: -34.6, lon: -58.4, color: '#90caf9', emoji: '💃', landmark: '탱고의 거리', photo: 'argentina.jpg', fact: '신나는 탱고 춤의 나라예요!',    animal: '🐆 재규어가 숲에 살아요',            food: '🥩 맛있는 소고기 구이를 먹어요' },
+  { id: 'southafrica', name: '남아프리카공화국', flag: '🇿🇦', lat: -33.9, lon: 18.4, color: '#ffd54f', emoji: '⛰️', landmark: '테이블 마운틴', photo: 'southafrica.jpg', fact: '평평한 산과 바다가 멋져요!', animal: '🐧 따뜻한 곳에 펭귄이 살아요', food: '🍖 숯불 고기 브라이를 먹어요' },
+  { id: 'newzealand', name: '뉴질랜드', flag: '🇳🇿', lat: -41.3, lon: 174.8, color: '#80deea', emoji: '🥝', landmark: '초록 언덕', photo: 'newzealand.jpg', fact: '초록 언덕과 양이 많은 나라예요!', animal: '🥝 날지 못하는 키위 새가 살아요',  food: '🐑 양이 사람보다 많아요' },
+];
+
+// 자연 명소 — 나라와 별개로 지구본 위 마커. 탭/비행 시 사진 카드.
+export const NATURAL_WONDERS = [
+  { id: 'amazon',  name: '아마존 밀림',       flag: '🌳', lat: -3.5,  lon: -62.0, color: '#66bb6a', emoji: '🌳', landmark: '세계 최대 밀림', photo: 'wonder-amazon.jpg',  fact: '세상에서 제일 큰 밀림이에요!',     animal: '🐆 재규어와 원숭이가 살아요', food: '🦋 나비와 새가 가득해요', isWonder: true },
+  { id: 'sahara',  name: '사하라 사막',       flag: '🏜️', lat: 23.0,  lon: 13.0,  color: '#ffca28', emoji: '🏜️', landmark: '세계 최대 사막', photo: 'wonder-sahara.jpg',  fact: '끝없이 펼쳐진 모래 사막이에요!',   animal: '🐪 낙타가 모래언덕을 걸어요', food: '☀️ 낮에는 아주 뜨거워요', isWonder: true },
+  { id: 'everest', name: '에베레스트산',     flag: '🏔️', lat: 28.0,  lon: 86.9,  color: '#b0bec5', emoji: '🏔️', landmark: '세계에서 가장 높은 산', photo: 'wonder-everest.jpg', fact: '세상에서 제일 높은 산이에요!', animal: '🐐 산양이 바위를 뛰어다녀요', food: '❄️ 꼭대기는 항상 눈이 쌓여 있어요', isWonder: true },
+  { id: 'reef',    name: '그레이트배리어리프', flag: '🐠', lat: -18.3, lon: 147.7, color: '#4dd0e1', emoji: '🐠', landmark: '세계 최대 산호초', photo: 'wonder-reef.jpg',    fact: '바닷속 알록달록 산호 정원이에요!', animal: '🐠 니모 같은 물고기가 살아요', food: '🐢 바다거북도 헤엄쳐요', isWonder: true },
+  { id: 'niagara', name: '나이아가라 폭포',   flag: '💧', lat: 43.1,  lon: -79.1, color: '#4fc3f7', emoji: '💧', landmark: '거대한 폭포', photo: 'wonder-niagara.jpg', fact: '엄청난 물이 쏟아지는 폭포예요!',   animal: '🌈 물안개에 무지개가 떠요', food: '🚤 배를 타고 가까이 가요', isWonder: true },
+  { id: 'aurora',  name: '오로라',           flag: '🌌', lat: 69.0,  lon: 18.0,  color: '#9575cd', emoji: '🌌', landmark: '밤하늘의 빛',  photo: 'wonder-aurora.jpg',  fact: '밤하늘에 춤추는 색깔 빛이에요!',   animal: '🦌 순록이 눈밭에 살아요', food: '✨ 추운 북쪽 나라에서 보여요', isWonder: true },
 ];
 
 const CONTINENTS = [
@@ -225,22 +248,23 @@ export function createEarthWorld(renderer, { onArrive } = {}) {
     return { ...c, kind: 'continent', sprite: sp, aspect: sp.scale.x / sp.scale.y };
   });
 
-  // 나라 마커 (점 + 국기 라벨) — 줌에 따라 크기 조절
-  const countryMarkers = COUNTRIES.map((c) => {
+  // 나라 + 자연 명소 마커 (점 + 라벨) — 줌에 따라 크기 조절
+  const PLACES = [...COUNTRIES, ...NATURAL_WONDERS];
+  const placeMarkers = PLACES.map((c) => {
     const dot = glowSprite(c.color, '#ffffff', 0.34);
     latLonToVec3(c.lat, c.lon, R * 1.01, dot.position);
     scene.add(dot);
     const label = labelSprite(`${c.flag} ${c.name}`, { color: '#fff', scale: 0.55 });
     label.position.copy(dot.position).multiplyScalar(1.06);
     scene.add(label);
-    return { ...c, kind: 'country', sprite: dot, label, aspect: label.scale.x / label.scale.y };
+    return { ...c, kind: c.isWonder ? 'wonder' : 'country', sprite: dot, label, aspect: label.scale.x / label.scale.y };
   });
 
   /** 카메라 거리에 맞춰 라벨/마커 크기·표시 조절 (클로즈업에서 안 겹치게) */
   function updateLabelScales() {
     const camDist = camera.position.length();
     const zoom = THREE.MathUtils.clamp((camDist - R) / 9, 0.32, 1.25);
-    for (const m of countryMarkers) {
+    for (const m of placeMarkers) {
       m.sprite.scale.setScalar(0.34 * (0.4 + zoom));
       const h = 0.55 * (0.35 + zoom * 0.85);
       m.label.scale.set(m.aspect * h, h, 1);
@@ -300,7 +324,7 @@ export function createEarthWorld(renderer, { onArrive } = {}) {
 
   /** 비행 시작 — 성공하면 나라 객체 반환 (출발 멘트는 main이 담당) */
   function flyTo(id) {
-    const to = COUNTRIES.find((c) => c.id === id);
+    const to = PLACES.find((c) => c.id === id);
     if (!to || flight || to === currentCountry) return null;
     const a = latLonToVec3(currentCountry.lat, currentCountry.lon, 1, new THREE.Vector3());
     const b = latLonToVec3(to.lat, to.lon, 1, new THREE.Vector3());
@@ -400,7 +424,7 @@ export function createEarthWorld(renderer, { onArrive } = {}) {
       const d = Math.hypot(clientX - px, clientY - py);
       if (d < radius && d < bestD) { best = item; bestD = d; }
     };
-    for (const m of countryMarkers) check(m, m.sprite.position, 60);
+    for (const m of placeMarkers) check(m, m.sprite.position, 60);
     if (!best) for (const c of continentSprites) check(c, c.sprite.position, 70);
     return best;
   }
@@ -410,7 +434,7 @@ export function createEarthWorld(renderer, { onArrive } = {}) {
     camera.updateProjectionMatrix();
   }
 
-  const destItems = COUNTRIES.map((c) => ({ id: c.id, name: c.name, color: c.color, emoji: c.flag }));
+  const destItems = PLACES.map((c) => ({ id: c.id, name: c.name, color: c.color, emoji: c.flag }));
 
   return {
     scene, camera, controls, enter, exit, update, flyTo, tapAt, onResize, destItems,

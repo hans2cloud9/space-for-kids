@@ -245,8 +245,11 @@ const earth = createEarthWorld(renderer, {
   onArrive: (c) => {
     ui.setActiveDest(null);
     ui.showName(`${c.flag} ${c.name}`);
-    speak(`${c.name} 도착! ${c.fact}`);
+    const stripEmoji = (s) => s.replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F1E6}-\u{1F1FF}\u{FE0F}]/gu, '').trim();
+    const lines = [`${c.name} 도착!`, c.fact, c.animal, c.food].filter(Boolean).map(stripEmoji);
+    speak(lines.join(' '));
     ui.showSubtitle(c.fact);
+    ui.showPhotoCard(c);
   },
 });
 
@@ -285,6 +288,7 @@ function exitEarthMode() {
   earth.exit();
   rig.setManual(false);
   ui.setEarthMode(false);
+  ui.hidePhotoCard();
   setQuestChipsHidden(false);
   rig.flyTo(22, new THREE.Vector3(0, 0, 0), 2.0);
 }
@@ -337,7 +341,7 @@ renderer.domElement.addEventListener('pointerup', (e) => {
   if (mode === 'earth') {
     const hit = earth.tapAt(e.clientX, e.clientY);
     if (!hit) return;
-    if (hit.kind === 'country') {
+    if (hit.kind === 'country' || hit.kind === 'wonder') {
       startEarthFlight(hit.id);
     } else {
       ui.showName(hit.name);

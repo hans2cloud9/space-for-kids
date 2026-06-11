@@ -152,6 +152,41 @@ export function createUI({ kids, onSaveKids, onSpeed, onLevel, onHome, onSoundTo
     levelButtons.forEach((b, i) => b.classList.toggle('active', i + 1 === n));
   }
 
+  // ---------- 도착 사진 카드 ----------
+  let cardTimer = null;
+  function showPhotoCard(place, ms = 7000) {
+    const card = $('photo-card');
+    const img = $('photo-card-img');
+    const emoji = $('photo-card-emoji');
+    // 사진 시도 → 실패 시 이모지 폴백
+    if (place.photo) {
+      img.onload = () => { img.style.display = 'block'; emoji.style.display = 'none'; };
+      img.onerror = () => { img.style.display = 'none'; emoji.style.display = 'block'; };
+      img.src = import.meta.env.BASE_URL + 'images/' + place.photo;
+    } else {
+      img.style.display = 'none';
+      img.removeAttribute('src');
+    }
+    emoji.textContent = place.emoji || place.flag || '🌍';
+    emoji.style.display = place.photo ? emoji.style.display : 'block';
+    $('photo-card-title').textContent = `${place.flag} ${place.name}`;
+    $('photo-card-landmark').textContent = place.landmark || '';
+    const facts = $('photo-card-facts');
+    facts.innerHTML = '';
+    [place.animal, place.food].filter(Boolean).forEach((line) => {
+      const d = document.createElement('div');
+      d.textContent = line;
+      facts.appendChild(d);
+    });
+    card.classList.add('show');
+    clearTimeout(cardTimer);
+    cardTimer = setTimeout(() => card.classList.remove('show'), ms);
+  }
+  function hidePhotoCard() {
+    clearTimeout(cardTimer);
+    $('photo-card').classList.remove('show');
+  }
+
   // ---------- 로켓 여행 모드 ----------
   $('btn-launch').addEventListener('click', () => onLaunch?.());
   $('btn-earth').addEventListener('click', () => onEarth?.());
@@ -232,6 +267,6 @@ export function createUI({ kids, onSaveKids, onSpeed, onLevel, onHome, onSoundTo
 
   return {
     showName, showSubtitle, setActiveLevel, setDestinations, setActiveDest,
-    setShipMode, setEarthMode, buildQuestButtons,
+    setShipMode, setEarthMode, buildQuestButtons, showPhotoCard, hidePhotoCard,
   };
 }

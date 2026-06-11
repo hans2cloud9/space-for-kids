@@ -66,6 +66,10 @@ npm run build           # dist/ 폴더를 그대로 배포
 
 크롬·사파리·엣지 최신 버전. 음성은 한국어 TTS 보이스가 있는 환경(맥·iOS·윈도우 기본 포함)에서 나옵니다. 소리는 첫 터치 후에 활성화됩니다(브라우저 정책).
 
+## 이미지 출처
+
+지구 알아보기 모드의 나라·명소 사진(`public/images/`)은 모두 [Wikimedia Commons](https://commons.wikimedia.org/)에서 가져온 **자유 이용 가능(Public Domain / CC BY / CC BY-SA)** 이미지입니다. 파일별 저작자·라이선스·원본 링크는 [`public/images/CREDITS.md`](public/images/CREDITS.md)를 참고하세요. 그 외 모든 텍스처·사운드는 코드로 절차 생성됩니다.
+
 ## 라이선스
 
-[MIT](LICENSE)
+코드: [MIT](LICENSE) · 명소 사진: 각 이미지의 원 라이선스(CREDITS.md 참조)
